@@ -1,7 +1,7 @@
 {
-  "name": "whatsapp-sdr-production",
+  "name": "sdr-whatsapp-v2",
   "version": "2.0.0",
-  "description": "Sistema SDR/IA WhatsApp - Integração N8N + OpenAI + MongoDB",
+  "description": "Sistema SDR WhatsApp V2.0 - Google AI Studio + Calendar + Dashboard Admin",
   "main": "index.js",
   "engines": {
     "node": ">=18.0.0",
@@ -10,21 +10,40 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "node test-webhook.js",
-    "logs": "node logs-viewer.js",
-    "deploy": "git add . && git commit -m 'Deploy update' && git push origin main",
-    "health": "curl $BASE_URL/health || curl http://localhost:3000/health",
-    "setup": "node setup-validator.js"
+    "test": "node test-system.js",
+    "test:ai": "node -e \"require('./index.js').testAI()\"",
+    "test:calendar": "node -e \"require('./index.js').testCalendar()\"",
+    "test:n8n": "curl -X POST http://localhost:3000/api/test/n8n",
+    "backup": "node -e \"require('./index.js').createBackup()\"",
+    "health": "curl -f http://localhost:3000/health || curl -f $BASE_URL/health",
+    "setup": "node setup-wizard.js",
+    "deploy": "git add . && git commit -m 'Deploy SDR v2.0' && git push origin main",
+    "logs": "tail -f logs/combined.log",
+    "logs:error": "tail -f logs/error.log",
+    "monitor": "pm2 monitor",
+    "restart": "pm2 restart sdr-whatsapp",
+    "cleanup": "node -e \"console.log('Cleaning up old conversations...'); process.exit(0)\"",
+    "migrate": "node migrate-v1-to-v2.js"
   },
   "keywords": [
     "whatsapp-sdr",
     "ai-agent",
+    "google-ai-studio",
+    "gemini-pro",
+    "google-calendar",
+    "appointment-booking",
     "n8n-integration",
-    "openai",
     "mongodb",
-    "render-deploy"
+    "render-deploy",
+    "dashboard-admin",
+    "lead-qualification",
+    "automated-scheduling"
   ],
-  "author": "João Penteado",
+  "author": {
+    "name": "João Penteado",
+    "email": "joaopenteado14@gmail.com",
+    "url": "https://github.com/joaopenteado14"
+  },
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
@@ -33,24 +52,56 @@
     "dotenv": "^16.3.1",
     "cors": "^2.8.5",
     "helmet": "^7.1.0",
-    "morgan": "^1.10.0",
     "express-rate-limit": "^7.1.5",
     "express-validator": "^7.0.1",
     "moment": "^2.30.1",
     "moment-timezone": "^0.5.44",
     "uuid": "^9.0.1",
-    "openai": "^4.20.1",
     "winston": "^3.11.0",
     "compression": "^1.7.4",
     "node-cron": "^3.0.3",
-    "googleapis": "^139.0.0"
+    "googleapis": "^139.0.0",
+    "@google/generative-ai": "^0.2.1"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/joaopenteado14/penteado.git"
   },
-  "homepage": "https://github.com/joaopenteado14/penteado#readme"
+  "homepage": "https://github.com/joaopenteado14/penteado#readme",
+  "bugs": {
+    "url": "https://github.com/joaopenteado14/penteado/issues"
+  },
+  "config": {
+    "mongodbUri": "mongodb://localhost:27017/sdr-whatsapp-v2"
+  },
+  "pm2": {
+    "name": "sdr-whatsapp",
+    "script": "index.js",
+    "instances": 1,
+    "exec_mode": "cluster",
+    "env": {
+      "NODE_ENV": "production",
+      "PORT": 3000
+    },
+    "error_file": "logs/pm2-error.log",
+    "out_file": "logs/pm2-out.log",
+    "log_file": "logs/pm2-combined.log"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "index.js",
+      ".env"
+    ],
+    "ignore": [
+      "logs/",
+      "backups/",
+      "node_modules/"
+    ],
+    "ext": "js,json,env"
+  }
 }
