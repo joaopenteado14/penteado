@@ -272,7 +272,7 @@ const text = response.text();
 
 function getNextStage(currentStage) {
   const stageFlow = {
-    ''INITIAL': 'SOLICITAR_NOME',
+      'INITIAL': 'SOLICITAR_NOME',
       'SOLICITAR_NOME': 'SOLICITAR_FUNCAO', 
       'SOLICITAR_FUNCAO': 'SOLICITAR_EMAIL',
       'SOLICITAR_EMAIL': 'SOLICITAR_FATURAMENTO',
