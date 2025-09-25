@@ -15,7 +15,7 @@ const { v4: uuidv4 } = require('uuid');
 const { GoogleGenerativeAI } = require('@google/generative-ai')
 const winston = require('winston');
 const compression = require('compression');
-// const { google } = require('googleapis');
+const { google } = require('googleapis');
 
 require('dotenv').config();
 
@@ -32,8 +32,8 @@ if (process.env.AI_API_KEY) {
   genAI = new GoogleGenerativeAI(process.env.AI_API_KEY);
 }
 
-// Google Calendar
-// const oauth2Client = new google.auth.OAuth2(
+ Google Calendar
+ const oauth2Client = new google.auth.OAuth2(
 //   process.env.GOOGLE_CLIENT_ID,
 //   process.env.GOOGLE_CLIENT_SECRET,
 //   process.env.GOOGLE_REDIRECT_URI
