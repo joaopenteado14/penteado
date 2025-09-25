@@ -1,6 +1,6 @@
 /**
  * SISTEMA SDR WHATSAPP - VERSÃO PRODUÇÃO CORRIGIDA
- * N8N + OpenAI + MongoDB + Google Calendar
+ * N8N + genAI + MongoDB + Google Calendar
  */
 
 const express = require('express');
@@ -12,10 +12,10 @@ const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
 const moment = require('moment-timezone');
 const { v4: uuidv4 } = require('uuid');
-const OpenAI = require('openai');
+const { GoogleGenerativeAI } = require('@google/generative-ai')
 const winston = require('winston');
 const compression = require('compression');
-const { google } = require('googleapis');
+// const { google } = require('googleapis');
 
 require('dotenv').config();
 
@@ -26,25 +26,26 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+// genAI
+let genAI;
+if (process.env.AI_API_KEY) {
+  genAI = new GoogleGenerativeAI(process.env.AI_API_KEY);
 });
 
 // Google Calendar
-const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI
-);
+// const oauth2Client = new google.auth.OAuth2(
+//   process.env.GOOGLE_CLIENT_ID,
+//   process.env.GOOGLE_CLIENT_SECRET,
+//   process.env.GOOGLE_REDIRECT_URI
+// );
 
-if (process.env.GOOGLE_REFRESH_TOKEN) {
-  oauth2Client.setCredentials({
-    refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
-  });
-}
+// if (process.env.GOOGLE_REFRESH_TOKEN) {
+//   oauth2Client.setCredentials({
+//     refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+//   });
+// }
 
-const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+// const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
 // Logger
 const logger = winston.createLogger({
@@ -268,13 +269,13 @@ RESPONDA APENAS COM JSON VÁLIDO:
 
 MENSAGEM: "${message}"`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 500,
-      temperature: 0.3
-    });
-
+   if (!genAI) {
+  throw new Error('Google AI não configurado');
+}
+const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+const result = await model.generateContent(prompt);
+const response = await result.response;
+const text = response.text();
     return JSON.parse(response.choices[0].message.content);
 
   } catch (error) {
@@ -567,7 +568,7 @@ app.get('/health', async (req, res) => {
       health.services.mongodb = 'disconnected';
     }
 
-    health.services.openai = process.env.OPENAI_API_KEY ? 'configured' : 'not_configured';
+    health.services.googleAI = process.env.AI_API_KEY ? 'configured' : 'not_configured';
     health.services.whatsapp = process.env.WHATSAPP_ACCESS_TOKEN ? 'configured' : 'not_configured';
     health.services.google_calendar = process.env.GOOGLE_CLIENT_ID ? 'configured' : 'not_configured';
 
