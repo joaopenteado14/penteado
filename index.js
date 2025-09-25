@@ -30,7 +30,7 @@ const PORT = process.env.PORT || 3000;
 let genAI;
 if (process.env.AI_API_KEY) {
   genAI = new GoogleGenerativeAI(process.env.AI_API_KEY);
-});
+}
 
 // Google Calendar
 // const oauth2Client = new google.auth.OAuth2(
