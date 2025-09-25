@@ -44,7 +44,10 @@ if (process.env.GOOGLE_REFRESH_TOKEN) {
   });
 }
 
-const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+let calendar;
+if (process.env.GOOGLE_REFRESH_TOKEN) {
+  calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+}
 
 // Logger
 const logger = winston.createLogger({
