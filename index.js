@@ -180,48 +180,26 @@ async function getAvailableSlots(daysAhead = 7) {
 
 async function scheduleGoogleCalendarEvent(conversation, selectedSlot) {
   try {
+    // TEMPORÁRIO: Simulação até configurar Google Calendar
     const startTime = moment(selectedSlot).tz('America/Sao_Paulo');
-    const endTime = startTime.clone().add(30, 'minutes');
     
-    const event = {
-      summary: `Reunião SDR - ${conversation.userData.name}`,
-      description: `Reunião agendada automaticamente\n\nContato: ${conversation.userData.name}\nFunção: ${conversation.userData.function}\nEmail: ${conversation.userData.email}\nWhatsApp: ${conversation.phoneNumber}`,
-      start: {
-        dateTime: startTime.toISOString(),
-        timeZone: 'America/Sao_Paulo',
-      },
-      end: {
-        dateTime: endTime.toISOString(),
-        timeZone: 'America/Sao_Paulo',
-      },
-      attendees: [
-        { email: process.env.YOUR_EMAIL },
-        { email: conversation.userData.email }
-      ],
-      conferenceData: {
-        createRequest: {
-          requestId: uuidv4(),
-          conferenceSolutionKey: { type: 'hangoutsMeet' }
-        }
-      }
-    };
-
-    const response = await calendar.events.insert({
-      calendarId: 'primary',
-      resource: event,
-      conferenceDataVersion: 1,
-      sendUpdates: 'all'
-    });
-
-    logger.info(`Calendar event created for ${conversation.phoneNumber}`);
-
+    logger.info(`Agendamento simulado para ${conversation.userData.name} em ${startTime.format('DD/MM/YYYY HH:mm')}`);
+    
     return {
       success: true,
-      eventId: response.data.id,
-      meetLink: response.data.hangoutLink,
+      eventId: 'temp_' + uuidv4(),
+      meetLink: 'https://meet.google.com/temp-meeting-' + Math.random().toString(36).substring(7),
       startTime: startTime.toISOString()
     };
 
+  } catch (error) {
+    logger.error('Agendamento temporário error:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
   } catch (error) {
     logger.error('Google Calendar scheduling error:', error);
     return {
