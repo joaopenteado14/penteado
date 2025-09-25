@@ -40,12 +40,12 @@ if (process.env.AI_API_KEY) {
 // );
 
 // if (process.env.GOOGLE_REFRESH_TOKEN) {
-//   oauth2Client.setCredentials({
-//     refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+   oauth2Client.setCredentials({
+   refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
 //   });
 // }
 
-// const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+ const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
 // Logger
 const logger = winston.createLogger({
