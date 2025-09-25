@@ -200,14 +200,7 @@ async function scheduleGoogleCalendarEvent(conversation, selectedSlot) {
     };
   }
 }
-  } catch (error) {
-    logger.error('Google Calendar scheduling error:', error);
-    return {
-      success: false,
-      error: error.message
-    };
-  }
-}
+
 
 // ============================================================================
 // AI PROCESSING
