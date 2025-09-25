@@ -32,27 +32,31 @@ if (process.env.AI_API_KEY) {
   genAI = new GoogleGenerativeAI(process.env.AI_API_KEY);
 }
 
- Google Calendar
-const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI
-);
-if (process.env.GOOGLE_REFRESH_TOKEN) {
-  oauth2Client.setCredentials({
-    refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
-  });
-}
-
-// Google Calendar initialization
+// Google Calendar setup
+let oauth2Client = null;
 let calendar = null;
-if (process.env.GOOGLE_REFRESH_TOKEN && oauth2Client) {
-  try {
+
+try {
+  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI
+    );
+
+    if (process.env.GOOGLE_REFRESH_TOKEN) {
+      oauth2Client.setCredentials({
+        refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+      });
+    }
+
     calendar = google.calendar({ version: 'v3', auth: oauth2Client });
-    console.log('✅ Google Calendar initialized');
-  } catch (error) {
-    console.log('❌ Google Calendar initialization failed:', error.message);
+    console.log('✅ Google Calendar initialized successfully');
+  } else {
+    console.log('⚠️ Google Calendar credentials not configured');
   }
+} catch (error) {
+  console.error('❌ Google Calendar setup error:', error.message);
 }
 // Logger
 const logger = winston.createLogger({
