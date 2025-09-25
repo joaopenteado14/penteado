@@ -44,11 +44,16 @@ if (process.env.GOOGLE_REFRESH_TOKEN) {
   });
 }
 
-let calendar;
-if (process.env.GOOGLE_REFRESH_TOKEN) {
-  calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+// Google Calendar initialization
+let calendar = null;
+if (process.env.GOOGLE_REFRESH_TOKEN && oauth2Client) {
+  try {
+    calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+    console.log('✅ Google Calendar initialized');
+  } catch (error) {
+    console.log('❌ Google Calendar initialization failed:', error.message);
+  }
 }
-
 // Logger
 const logger = winston.createLogger({
   level: 'info',
