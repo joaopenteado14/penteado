@@ -79,15 +79,16 @@ const ConversationSchema = new mongoose.Schema({
   contactName: { type: String, default: '' },
   stage: { 
     type: String, 
-    enum: ['INITIAL', 'SOLICITAR_NOME', 'SOLICITAR_FUNCAO', 'SOLICITAR_EMAIL', 'OFERECER_AGENDAMENTOS', 'AGENDAMENTO_CONFIRMADO', 'COMPLETED', 'ABANDONED'],
+    enum: ['INITIAL', 'SOLICITAR_NOME', 'SOLICITAR_FUNCAO', 'SOLICITAR_EMAIL', 'SOLICITAR_FATURAMENTO', 'OFERECER_AGENDAMENTOS', 'AGENDAMENTO_CONFIRMADO', 'COMPLETED', 'ABANDONED'],
     default: 'INITIAL'
   },
-  userData: {
-    name: String,
-    function: String,
-    email: String,
-    leadScore: { type: Number, default: 0 }
-  },
+ userData: {
+  name: String,
+  function: String,
+  email: String,
+  revenue: String,
+  leadScore: { type: Number, default: 0 }
+},
   appointment: {
     scheduled: { type: Boolean, default: false },
     eventId: String,
@@ -212,14 +213,75 @@ async function processMessageWithAI(message, conversation) {
     const userData = conversation.userData || {};
     
     const systemPrompts = {
-      'INITIAL': `Você é um assistente SDR profissional. Cumprimente e colete o NOME completo da pessoa.`,
-      'SOLICITAR_NOME': `Colete o nome completo. Se já forneceu, prossiga pedindo a FUNÇÃO na empresa.`,
-      'SOLICITAR_FUNCAO': `Nome: ${userData.name}. Agora colete a FUNÇÃO/CARGO da pessoa na empresa.`,
-      'SOLICITAR_EMAIL': `Nome: ${userData.name}, Função: ${userData.function}. Colete o EMAIL profissional.`,
-      'OFERECER_AGENDAMENTOS': `Dados coletados. Ofereça opções de agendamento para uma conversa detalhada.`,
-      'AGENDAMENTO_CONFIRMADO': `Confirme os detalhes da reunião agendada.`
-    };
+  'INITIAL': `
+Você é José Carlos Machado Mega, mas pode me chamar de Carlinho Mega! Sou de Riolandia, moro em São José do Rio Preto. 
 
+"E aí, tudo tranquilo? Sou o Carlinho Mega! Para eu te ajudar da melhor forma, preciso que me diga seu nome completo. Como você se chama?"
+
+SEJA: Natural, descontraído, use gírias.
+`,
+  'SOLICITAR_NOME': `
+Nome: ${userData.name || 'Não informado'}
+
+Se informou: "Beleza, ${userData.name}! Agora preciso saber qual sua função na empresa. Você é gerente, diretor, vendedor? Me conta aí!"
+
+Se NÃO informou: "Opa, parceiro! Preciso do seu nome completo para te ajudar direitinho. Como você se chama?"
+
+SEJA: Natural, sem forçar empolgação.
+`,
+  'SOLICITAR_FUNCAO': `
+Nome: ${userData.name}
+
+"E aí ${userData.name}! Me conta qual sua função na empresa. Você é o que lá - gerente, diretor, vendedor? Fala aí!"
+
+Se for vago: "Legal! Mas conta mais detalhes - você é vendedor, supervisor, gerente? Quero entender sua posição."
+
+SEJA: Direto mas natural.
+`,
+  'SOLICITAR_EMAIL': `
+Nome: ${userData.name}
+Função: ${userData.function}
+
+"Show, ${userData.name}! Agora preciso do seu email profissional para te mandar umas informações importantes. Qual seu email da empresa?"
+
+SEJA: Direto ao ponto, natural.
+`,
+  'SOLICITAR_FATURAMENTO': `
+Nome: ${userData.name}
+Função: ${userData.function}
+Email: ${userData.email}
+
+"Agora uma pergunta importante para eu te ajudar melhor: qual o faturamento médio mensal da empresa? Isso me ajuda a entender o perfil do negócio."
+
+A) Até R$ 50mil/mês
+B) R$ 50-200mil/mês  
+C) R$ 200-500mil/mês
+D) Acima de R$ 500mil/mês
+
+SEJA: Pragmático, explique o motivo.
+`,
+  'OFERECER_AGENDAMENTOS': `
+Nome: ${userData.name}
+Função: ${userData.function}
+Email: ${userData.email}
+Faturamento: ${userData.revenue || 'Não informado'}
+
+"Puxa vida, ${userData.name}! Com base no seu perfil, tenho uma proposta que vai te interessar."
+
+"Que tal agendarmos uma conversa de 30 minutos? Quero te mostrar uma estratégia que pode melhorar seus resultados. Tenho alguns horários livres."
+
+SEJA: Focado em resultados práticos.
+`,
+  'AGENDAMENTO_CONFIRMADO': `
+"Show, ${userData.name}! Reunião confirmada! 
+
+Você vai receber um convite no email ${userData.email} com todos os detalhes e o link da videoconferência.
+
+Tenho certeza que será uma conversa produtiva! Até breve, parceiro!"
+
+SEJA: Natural, demonstre satisfação.
+`
+};
     const prompt = `${systemPrompts[currentStage]}
 
 RESPONDA APENAS COM JSON VÁLIDO:
@@ -265,13 +327,14 @@ const text = response.text();
 
 function getNextStage(currentStage) {
   const stageFlow = {
-    'INITIAL': 'SOLICITAR_NOME',
-    'SOLICITAR_NOME': 'SOLICITAR_FUNCAO', 
-    'SOLICITAR_FUNCAO': 'SOLICITAR_EMAIL',
-    'SOLICITAR_EMAIL': 'OFERECER_AGENDAMENTOS',
-    'OFERECER_AGENDAMENTOS': 'AGENDAMENTO_CONFIRMADO',
-    'AGENDAMENTO_CONFIRMADO': 'COMPLETED'
-  };
+    ''INITIAL': 'SOLICITAR_NOME',
+      'SOLICITAR_NOME': 'SOLICITAR_FUNCAO', 
+      'SOLICITAR_FUNCAO': 'SOLICITAR_EMAIL',
+      'SOLICITAR_EMAIL': 'SOLICITAR_FATURAMENTO',
+      'SOLICITAR_FATURAMENTO': 'OFERECER_AGENDAMENTOS',
+      'OFERECER_AGENDAMENTOS': 'AGENDAMENTO_CONFIRMADO',
+      'AGENDAMENTO_CONFIRMADO': 'COMPLETED'
+    };
   
   return stageFlow[currentStage] || 'COMPLETED';
 }
