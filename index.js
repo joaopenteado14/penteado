@@ -261,12 +261,11 @@ MENSAGEM: "${message}"`;
    if (!genAI) {
   throw new Error('Google AI não configurado');
 }
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 const result = await model.generateContent(prompt);
 const response = await result.response;
 const text = response.text();
-    return JSON.parse(response.choices[0].message.content);
-
+    return JSON.parse(text);
   } catch (error) {
     logger.error('AI processing error:', error);
     return {
